@@ -20,5 +20,7 @@ class QqItemPipeline(object):
         content = json.dumps(dict(item), ensure_ascii=False) + ',\n'
         self.file.write(content)
 
+        return item
+
     def colse(self, spider):
         self.file.close()
