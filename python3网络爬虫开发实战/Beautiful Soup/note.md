@@ -1,0 +1,46 @@
+# 使用Beautiful Soup
+- 它是借助于网页的结构和属性等特性来解析网页的,有了它,我们不用去写一些复杂的正则表达式.
+- 只需要简单的几条语句,就可以完成网页中某个元素的提取
+- 官方解释:
+    - Beautiful Soup提供一些简单的,Python式的函数来处理导航,搜索,修改分析树等功能
+    - 它是一个工具箱,通过解析文档为用户提供需要抓取的数据,因为简单,所以不需要多少代码就可以写出一个完整的应用程序
+    - Beautiful Soup自动输入文档转换为Unicode编码,输出文档转换为UTF-8编码.
+    - 不需要考虑编码方式,除非文档真没有指定一个编码方式,这时你仅仅需要说明一下原始编码方式就可以了
+    - Beautiful Soup已成为和xml,html6lib一样出色的Python解释器,为用户灵活的提供不同的解析策略或强劲的速度
+    - 所以说,利用它可以省去很多繁琐的提取工作,提高解析效率
+- 准备工作
+    - 确保安装Beautiful Soup和lxml文件
+- 解析器
+    - Beautiful Soup在解析时实际上依赖解析器,他除了支持Python标准库中的HTML解析器外,还支持一些第三方解析器(比如lxml)
+    - Python标准库:    
+        - BeautifulSoup(markup, "html.parse"):
+            - Python的内置标准库,执行速度适中,文档容错能力强
+    - lxml HTML解析器:
+        - BeautifulSoup(markup,"lxml"):
+            - 速度快,文档容错能力强
+    - lxml XML解析器:
+        - BeautifulSoup(markup,"xml"):
+            - 速度快,唯一支持XML的解析器
+    - html5lib:
+        - BeautifulSoup(markup, "html5lib"):
+            - 最好的容错性,以浏览器的方式解析文档,生成HTML5格式的文档
+    - 基本用法:
+        - 案例:BeautifulSoup1
+        - prettify()方法,可以把要解析的字符串以标准的缩进格式进行输出
+- 节点选择器
+    - 直接调用节点的名称就可以选择节点元素,在调用string属性就可以得到节点内的文本了,这种方式速度非常快
+    - 如果单个节点结构层次非常清晰,可以选用这种方式解析
+    - 案例:BeautifulSoup2
+- 方法选择器
+    - 如果进行比较复杂的选择的话,可以使用find_all, find调用他们,然后传入相应的参数,可以灵活查询
+    - 案例:BeautifulSoup3
+- CSS选择器
+    - 使用CSS选择器时,只需要调用select()方法,传入相应的CSS选择器即可
+    - 案例:BeautifulSoup4
+## 总结:
+- 推荐使用lxml解析库,必要时使用html.parser
+- 节点选择筛选功能弱但是速度快
+- 建议使用find()或者find_all()查询匹配单个结果或者多个结果
+- 如果对CSS选择器熟悉,可以使用select()方法选择
+        
+    
