@@ -1,0 +1,120 @@
+# Selenium的使用
+- Selenium是一个自动化测试工具,利用他可以驱动浏览器人特定的动作,如点击,下拉等操作.同事还可以获取浏览器当前呈现的页面源代码,做到可见即可爬
+- 对于一些JavaScrpt动态渲染的页面来说,此种抓取方式非常有效
+- 准备工作:
+    - 以Chrome为例,确保安装好了Chrome浏览器并配置好ChromeDriver
+    - 确保安装好Python的Selenium库
+- 基本使用:
+    - Selenium的代码运行之后会自动淡出一个Chrome浏览器.
+    - 如果使用Selenium来驱动浏览器加载页面的话,就可以直接拿到JavaScript渲染的结果,也不用担心使用的是什么是加密系统
+    - 案例:基本使用.py
+- 声明浏览器对象
+    - Selenium支持非常多的浏览器,如Chrome, Firefox,Edge等,还有Android,BlackBerry等手机的浏览器,也支持无界面浏览器PhantomJS
+    - 初始化:   
+            - browser = webdriver.Chrome()
+            - browser = webdriver.Firefox()
+            - browser = webdriver.Edge()
+            - browser = webdriver.PhatomJS()
+            - browser = webdriver.Safari()
+- 访问页面
+    - 可以使用get()方法来请求页面m参数传入链接URL即可
+    - 使用page_source函数就通过几行代码就可以实现浏览器的驱动并获取网页源码
+    - 案例:访问页面.py
+- 查找节点
+    - Selenium可以驱动浏览器完成各种操作,比如填单,模拟点击等等.
+    - 比如我们想要完成向某个输入框输入文字的操作,总需要知道这个输入框在哪里,而Selenium提供了一系列查找节点的方法,可以用这些方法来获取想要的节点
+    - 单个节点
+        - find_element_by_name()是根据name值获取节点
+        - find_element_by_id()是根据id值获取节点
+            - 获取单个节点的方法:
+                - find_element_by_id
+                - find_element_by_name
+                - find_element_by_xpath
+                - find_element_by_link_text
+                - find_element_by_tag_name
+                - find_element_by_class_name
+                - find_element_by_css_selector
+        - 还可以使用CSS选器,Xpath等获取方式
+        - 案例:查找节点1.py
+        - 另外,Selement还提供了通用方法find_element(),他需要传入两个参数:查找方式By和值.
+        - 实际上,他就是find_element_by_id()这种方法的通用函数版本,比如find_element_by_id(id)就等价于find_element(By.ID, id)
+        - 二者得到的结果完全一致的
+            - 案例:查找节点2.py
+- 多个节点
+    - 如果只是查找目标网页中只有一个,那么完全可以使用find_element()方法,但是如果多个节点,再用find_element()方法查找,就只能得到一个了
+    - 如果需要查找所有的满足的条件的节点,需要用find_elements()这样的方法.
+        - 案例:多个节点.py
+        - 获取多个节点的方法有
+            - find_elements_by_id
+            - find_elements_by_name
+            - find_elements_by_xpath
+            - find_elements_by_link_text
+            - find_elements_by_partial_link_text
+            - find_elements_by_tag_name
+            - find_elements_by_class_name
+            - find_elements_by_class_selector
+        - 也可以直接使用find_elements()方法来选择,可以写成
+            - find_elements(By.SELECTR, "service-bd li")
+            结果都是一样的
+- 节点交互
+    - Selenium可以驱动浏览器执行一些操作,也就是说可以让浏览器执行一些动作
+    - 比较常见的用法有:
+        - 输入文字的使用使用send_keys()方法
+        - 清空文字时用clear()方法
+        - 点击按钮时用click()方法
+        - 案例；节点交互.py
+- 动作链
+    - 鼠标拖拽操作,键盘操作,这些动作就是动作链
+    - 案例:动作链.py
+- 执行JavaScript
+    - 对于某些操作,SeleniumAPI没有提供,比如下拉,他可以直接模拟运行JavaScript,可以直接使用execute_script()方法
+    - 案例:JavaScript的操作.py
+- 获取节点信息
+    - 通过page_source属性可以获取到网页的源代码,接着就可以使用解析库来提取信息了
+    - Selenium已经提供了选择节点的方法,返回的是WebElement类型,他也有相关的方法和属性来直接提取节点信息如属性,文本等
+    - 获取属性:
+        - 这里可以使用get_attribute()方法来获取节点的属性,但是其前提是先选中这个节点
+        - 案例:获取属性.py
+    - 获取文本值
+        - 每个WebElement节点都有text属性,直接调用这个属性就可以得到节点内部的文本信息,这相当于BeautifulSoup的get_text()方法
+        - 案例:获取文本值.py
+    - 获取id,位置,标签名和大小
+        - WebElement节点还有一些其他属性,比如id属性可以获取节点id,location属性可以获取该节点在页面中的相对位置
+        - tag_name属性可以获取标签名称,size属性可以获取节点大小,也就是宽高,这些属性有的时候是很有用的
+        - 案例:获取id,位置,标签名和大小.py
+    - 切换Frame
+        - 网页中有一节点叫做iframe,也就是子Frame,相当于网页的子页面,它的结构和外部网页的结构完全一致
+        - Selenium打开网页后,它默认是在父级Frame里面操作,而此时如果页面中还有Frame,他是不能获取到子Frame里面的节点的.
+        - 这时候就需要使用switch_to.frame()方法来切换Frame
+        - 案例:切换frame.py
+- 延时等待
+    - 在Selenium中,get()方法会在网页框架加载结束后结束执行,此时如果获取page_source,可能并不是浏览器完全加载的页面
+    - 如果某些页面有额外的Ajax请求,我们网页源代码中不一定能成功获取,所以,这里需要延时等待一定的时间,确保节点已经加载出来
+    - 这里等待的方式有两种,一种是隐式等待,一种是显式等待
+    - 隐式等待:
+        - 当使用隐式等待执行测试的时候,如果Selenium没有在DOM中找到节点,将继续等待,超出设定时间后,则抛出找不到节点的异常
+        - 换句话说,当查找节点而节点没有立即出现的时候隐式等待将等待一段时间再查找DOM，默认的时间是0
+        - 案例: 隐式等待.py
+    - 显示等待
+        - 显示等待方法,需要指定查找的节点,然后指定一个最长等待时间.
+        - 如果在规定时间内加载出来这个节点,就返回查找的节点,如果到了规定时间没有加载出该节点,则抛出异常
+        - 案例: 显示等待.py
+- 前进和后退
+    - 平常使用浏览器都有前进和后退,Selenium也可以完成这个操作,它使用back()方法后退,使用froward()方法前进
+    - 案例:前进和后退.py
+- Cookies
+    - 使用Selenium,还可以方便的对Cookies进行操作,例如获取,添加,删除Cookies等等
+    - 案例:Cookies.py
+    - 使用add_cookies()方法添加或者修改cookies
+    - 使用delete-cookies()方法删除cookies
+    - 使用get_cookies()获取当前页面的cookies
+- 选项卡管理
+    - 在访问网页的时候,会开启一个个选项卡, 在Selenium中,我们也可以对选项卡进行操作
+    - 案例: 选项卡管理.py
+- 异常处理
+    - 在使用Selenium的过程中,难免会遇到一些异常,例如超时,节点未找到的错误.
+    - 一旦出现此类错误,程序便不会继续运行了,这里可以使用try except语句来捕获各种异常
+    - 案例:异常处理1.py
+    - 案例:异常处理2.py
+- 
+    
