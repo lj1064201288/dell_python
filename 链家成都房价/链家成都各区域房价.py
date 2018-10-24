@@ -102,6 +102,8 @@ def city_locat(area):
         locat = locat + '7'
     if area == '高新西':
         locat = locat + '1'
+    if area == '崇州':
+        locat = locat + '1'
     citys = ['jinjiang','qingyang','wuhou','gaoxin7','chenghua','jinniu','tianfuxinqu','gaoxinxi1','shuangliu','wenjiang','pidou','longquanyi','xindou','qingbaijiang','jintang','dayi','pujiang','xinjin','pengzhou','qionglai','chongzhou1','doujiangyan','jianyang','tianfuxinqunanqu','deyang','leshan','meishan','ziyang']
 
     if locat in citys:
