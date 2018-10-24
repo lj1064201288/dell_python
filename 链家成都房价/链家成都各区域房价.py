@@ -7,13 +7,14 @@ from lxml import etree
 
 class Chengdu(object):
 
+    #初始化地址,页数,内容,url
     def __init__(self, locat):
         self.locat = locat
         self.page = 0
-
         self.content = ''
         self.url = 'https://cd.fang.lianjia.com/loupan/{0}/'.format(self.locat)
 
+    # 获取该地区有多少房子的信息,并传入给self.page
     def get_end_page(self):
         try:
             response = requests.get(self.url)
@@ -28,6 +29,7 @@ class Chengdu(object):
         except Exception as e:
             print(e)
 
+    # 把每一页的源码返回到下一步进行解析
     def get_items(self):
 
         for page in range(1, self.page+1):
@@ -40,6 +42,7 @@ class Chengdu(object):
             except:
                 print("ContentError!!!")
 
+    # 解析页面,获取需要的数据,每获取到一条者返回一条信息
     def get_parse(self):
         if self.get_items():
             for info in self.get_items():
@@ -63,6 +66,7 @@ class Chengdu(object):
 
                     yield houses
 
+    # 对获取到的信息进行保存,以excel表格的方式进行存储
     def write_csv(self):
 
         file_path =  '链家' + os.sep + self.locat + os.sep
@@ -71,26 +75,25 @@ class Chengdu(object):
         file = open(file_path + self.locat + '.csv', 'a')
         writer = csv.writer(file)
         writer.writerow(['名称', '类型', '状态', '地址', '面积', '标签', '价格'])
-        # content_list = list(self.get_parse())
-        # print(content_list)
-        # print(type(content_list))
+
         content_generator = self.get_parse()
         for content in content_generator:
             print(content)
             content = list(content)
             writer.writerow(content)
-        #file.write(content)
+
         file.close()
 
-
-def city_locat(city):
+# 实例化对象执行爬虫
+def main(city):
     lianjia = Chengdu(city)
     lianjia.get_end_page()
     lianjia.get_items()
     lianjia.get_parse()
     lianjia.write_csv()
 
-def city(area):
+# 获取输入的地址
+def city_locat(area):
     pinyin_locat = pypinyin.pinyin(area, pypinyin.NORMAL)
     locat = ''
     for pinyin in pinyin_locat:
@@ -103,18 +106,19 @@ def city(area):
 
     if locat in citys:
         index = citys.index(locat)
-        city_locat(citys[index])
+        main(citys[index])
     else:
         print('没有这个城市,请重新输入!')
 
 if __name__ == '__main__':
 
+    # 输入想要获取的地区,输入q退出获取
     while True:
         area = input('请输入需要获取的地区(输入q退出):')
 
         if area == 'q':
             break
 
-        city(area)
+        city_locat(area)
 
 
