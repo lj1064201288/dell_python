@@ -1,3 +1,4 @@
+#coding=utf-8
 '''
 爬取网易云音乐新歌榜
 '''
@@ -6,15 +7,18 @@ import os
 import csv
 import time
 import requests
+# import multiprocessing
+import threading
 from lxml import etree
 from selenium import webdriver
+
 
 
 
 class WangyiMusc(object):
 
     # id表示你要获取排行榜
-    def __init__(self, id, mating):
+    def __init__(self, mating, id):
         self.browser = webdriver.Chrome()
         self.id = id
         self.url = "https://music.163.com/#/discover/toplist?id={0}".format(self.id)
@@ -26,6 +30,7 @@ class WangyiMusc(object):
         self.browser.switch_to_frame('contentFrame')
         iframe = self.browser.page_source
         time.sleep(5)
+
         return iframe
 
     def parse_html(self):
@@ -74,11 +79,11 @@ class WangyiMusc(object):
             print("下载{0}失败!!!".format(title), e.args)
 
     def write_items(self):
-        path = self.get_time() + os.sep + self.mat + "榜单信息"
+        path = self.get_time() + os.sep + self.mat
         try:
             if not os.path.exists(path):
                 os.makedirs(path)
-            with open(path+'.csv', 'w', encoding='utf-8') as file:
+            with open(path+'榜单信息.csv', 'w', encoding='utf-8') as file:
                 csvfile = csv.writer(file)
                 csvfile.writerow(['排名', '歌名', '时长', '歌手'])
                 for parse in self.parse_html():
@@ -87,10 +92,10 @@ class WangyiMusc(object):
         except Exception as e:
             print("存储信息失败!", e.args)
 
-def operation(id, mating):
+def operation(mating, id):
 
     try:
-        music = WangyiMusc(id, mating)
+        music = WangyiMusc(mating, id)
         music.get_html()
         music.parse_html()
         music.get_time()
@@ -127,12 +132,34 @@ def user_select():
     for k, v in nums.items():
         print(k, ":", v)
 
-    n = input('请输入你要下载的榜单(请输入数字):')
-    if str(n) not in nums.keys():
-        print("输入有误，请重新输入")
-    mating = nums[int(n)]
-    id = musics[mating]
-    operation(id, mating)
+    music_list = list(musics.items())
+
+
+    list1 = [i for i in range(len(music_list)) if i%4==0]
+
+
+    n = int(input('请输入你要下载的榜单(请输入数字,输入0全部提取):'))
+    if n == 0:
+        for t in list1:
+            t1 = threading.Thread(target=operation, args=music_list[t])
+            t2 = threading.Thread(target=operation, args=music_list[t+1])
+            t3 = threading.Thread(target=operation, args=music_list[t+2])
+            t4 = threading.Thread(target=operation, args=music_list[t+3])
+
+            t1.start()
+            t2.start()
+            t3.start()
+            t4.start()
+
+            t1.join()
+            t2.join()
+            t3.join()
+            t4.join()
+
+    id = musics[nums[n]]
+    mating = nums[n]
+
+    operation(mating, id)
 
 
 if __name__ == '__main__':
