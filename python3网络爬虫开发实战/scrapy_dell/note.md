@@ -1,0 +1,229 @@
+# Scrapy框架
+## Scrapy框架的介绍:
+- Scrapy是一个基于Twistrd的异步处理框架.是纯Python实现的爬虫框架,其架构清晰,模块之间的耦合程度低,可扩展性强,可以灵活完成各种需求
+- 架构介绍:
+    - Engine: 引擎,处理整个系统的数据处理,触发事物,是整个框架的核心
+    - Item: 项目,它定义了爬取结果的数据结构,爬取的数据会被赋值成该Item对象
+    - Scheduler: 调度器,接受引擎发过来的请求将其加入队列中,在引擎再次请求的时候将请求提供给引擎
+    - Downloader: 下载器,下载网页内容,并将网页内容返回给Spider
+    - Spiders: spider, 其内定义了爬虫的逻辑和网页的解析规则,它主要负责解析响应并生成提取结果和新的请求
+    - Item Pipeline: 项目管道,负责处理由spider从网页中抽取的项目,它的主要任务是清洗,验证和存储数据
+    - Downloader Middlewares: 下载中间件,位于引擎和下载器之间的钩子框架,主要处理引擎与下载器之间的请求及相应
+    - Spider Middlewaers: spider中间件,位于引擎和spider之间的钩子框架,主要处理spider输入的相应和输出的结果及新的请求
+- 数据流
+    - Scrapy中的数据流由引擎控制,数据流的过程:
+        - Engine首先打一个网站,找到处理该网站的spider,并向该spider请求第一个要爬取的URL
+        - Engine从spider中获取到第一个要爬取的URL,并通过Scheduler以Request的形式调度
+        - Engine向Scheduler请求下一个要爬取的URL
+        - Scheduler返回一个要爬取的URL给Engine，Engine将URL通过Downloader Middlewares转发给Downloader下载
+        - 一旦页面下载完毕,Downloader生成页面的Response，并将其通过Downloader Middlewares发送给Engine
+        - Engine从下载器中接收到Response,并将其通过Spider Middlewares发送给spider处理
+        - spider处理Response，并返回爬取的Item及新的Request给Scheduler
+        - 重复第二到第八步，知道Scheduler中没有更多的Request，Engine关闭该网站，爬取结束
+    - 通过多个组件的相互协作,不同件完成工作的不同,组件异步处理的支持,Scrapy最大限度地利用了网络带宽，大大提高了数据爬取和处理的效率
+- 项目结构
+    - Scrapy框架和pyspider不同,它是通过命令行来创建项目的,代码的编写还是需要IDE
+    - scrapy.cfg: 它是Scrapy项目的配置文件其内定义项目的配置文件路径,部署相关信息等内容
+    - item.py: 它定义item数据结构,所有的Item的定义都可以放在这里
+    - Pipelines.py: 它定义Item Piplelines的实现,所有的Item Pipeline的实现都可以放在这里
+    - settings.py: 它定义项目的全局配置
+    - middlewares.py: 它定义Spider Middlewares和 Downloader Middlewares的实现
+    - spiders: 其内包含一个个Spider的实现,每个Spider都有一个文件
+## Scrapy入门
+- 创建项目: scrapy startproject tutorial
+- 创建spider: scarpy genspider qutes qutes.toscrape.com
+    - name: 他是每个项目唯一的名字,用来区分不同的Spider
+    - allowed_domains: 它是允许爬取的域名,如果初始化或者后续的请求链接不是这个域名下的,则请求链接会被过滤掉
+    - start_urls: 它包含了Spider在启动时爬取的url列表,初始请求是由它来定义的
+    - parse: 它是Spider的一个方法.默认情况下,被调用时start_urls里面的链接构成的请求完成下载执行后,返回的相应就会作为唯一的参数传递给这个函数
+              该方法负责解析返回的响应,提取数据或者进一步生成要处理的请求
+- 创建item: Item是保存爬取数据的容器,它的使用方法和字典类似,不过,相比字典,Item多了额外的保护机制,可以避免拼写错误或者定义字段错误
+- 解析Response
+    - parse()方法的参数response是start_urls里面的链接爬取后的结果
+    - 所以在parse()方法中,我们可以直接对response变量包含的内容进行解析,比如浏览请求结果的网页源代码,或者进一步分析源代码内容,或者找出结果中的链接而得到下一个请求
+- 后续Request
+    - url: 它是请求链接
+    - callback: 它是回调函数.当指定了改回调函数的请求完成之后,获取到相应,引擎会将该相应作为参数传递给这个回调函数.回调函数进行解析或生成下一个请求
+- 启动
+    - scrapy crawl quotes
+- 保存到文件
+    - scrapy crawl quotes -o quotes.json
+    - scrapy crawl quotes -o quotes.csv
+    - scrapy crawl quotes -o quotes.jsonlines
+    - scrapy crawl quotes -o quotes.xml
+    - scrapy crawl quotes -o quotes.pickle
+    - scrapy crawl quotes -o quotes.matshal
+    - 通过Scrapy提供的Feed Exports, 我们可以轻松的输出抓取结果到文件,杜宇一下小型项目来说,这应该足够了,不过如果想要更复杂的输出,如输出到数据库等,可以使用Item Pipeline来完成
+- 使用Item Pipeline
+    - 如果进行更复杂的操作,如将结果保存到MongoDB数据库,或者筛选某些有用的item,则可以定义Item Pipeline来实现
+    - Item Pipeline为项目管道,当Item生成后,他会自动被送到Item Pipeline进行处理
+        - 清理HTML数据
+        - 验证爬取数据,检查爬取字段
+        - 查重并丢弃重复内容
+        - 将爬去结果保存到数据库
+##Selector的用法
+- 利用Beautiful Soup,pyquery以及正则表达式来提取网页数据,这确实非常方便.
+- 而Scrapy还提供了自己的数据提取方法,即Selector,Selector是基于lxml来构建的,支持Xpath选择器,CSS选择器以及正则表达式,功能全面,解析速度和准确度非常高
+- 直接使用
+    - Selector是一个可以独立使用的模块,我们可以直接利用Selector这个类来构建一个选择器对象,然后调用它的相关方法如xpath(),css()等来提取数据
+- Scrapy shell
+    - 由于Selector主要是与Scrapy结合使用,如Scrapy的回调函数中的参数response直接调用xah()或者css()方法来提取数据.
+    - scrapy shell [url]
+    - 进入到Scrapy shell模式,这个过程其实是Scrapy发起一次请求,请求的URL就是刚才命令行下输入的URL,然后把一些可操作的变量传递给我们,如request,response等
+- XPath选择器
+    - 进入Scrapy shell之后,我们将主要操作response这个变量来进行解析,因为我们解析的是HTML代码,Selector将自动使用HTML语法来分析
+    - response有一个属性selector,我们调用response.selector返回的内容就相当于用response的body构造了一个Selector对象
+    - 通过这个Selector对象我们可以调用解析方法如xpath(),css()等,通过向方法传入XPath或CSS选择器参数就可以实现信息的提取
+- CSS选择器
+    - Scrapy的选择器同时还对接CSS选择器,使用response.css()方法可以使用CSS选择器来选择对应的元素
+- 正则匹配
+    - Scrapy 的选择器还支持正则匹配
+## Spider的用法
+- 在Scrapy中，要抓取网站的链接配置,朱而去逻辑，解析逻辑都是在Spider中配置的
+- 在实现Scrapy爬虫项目时,最核心的类便是Spider类了,它定义了如何爬取某个网站的流程和解析方式,简单来说，Spider要做的就两件事情
+    - 定义爬取网站的动作
+    - 分析爬取下来的网页
+- 对于Spider来说,整个爬取循环过程:
+    - 以初始URL初始化Request,并设置回调函数.当该Request成功请求并返回时,Response生成并作为参数传给该回调函数
+    - 在回调函数内分析返回的网页内容,返回结果有两种形式
+        - 一种是解析到有小结果返回字典或者Item对象,他们可以经过处理后直接保存
+        - 第二种是解析得到下一个链接,可以利用此链接工业早Request并设置新的回调函数,返回Request等待后续调度
+    - 如果返回的是字典或者Item对象,我们可通过Feed Exports等组建将返回结果存入到文件,如果设置了Pipeline的话，我们可以使用Pipeline处理并保存
+    - 如果返回的是Request,那么request执行成功得到Response之后,Response会被传递给Request中定义的回调函数,在回调函数中我们恶意再次使用选择器来分析新得到的网页内容,并根据分析的数据生成item
+- Spider类分析
+    - 我们定义的Spider是继承自scrapy.spiders.Spider,scrapy.spiders.Spider这个类最简单最基本的Spider类.其他Spider必须继承这个类,还有一个特殊Spider类都是继承自她
+    - scrapy.spiders.Spider这个类提供了start_requests()方法默认实现,读取并请求start_urls属性.并根据返回的结果调用parse()方法解析结果,他还有一些基础属性
+        - name: 爬虫名称,是定义Spider名字的字符串
+            - Spider的名字定义了Scrapy如何定义并初始化Spider,他必须是唯一的
+            - 不过我们可以生成多个相同的Spider实例,数量没有限制
+            - name是Spider最重要的属性
+            - 如果Spider爬取单个网站,一个常见的做法就是以该网站的域名名称来命名Spider
+            - 例如,Spider爬取mywebsite.com，该Spider通常会被命名为mywebsite
+        - allowed_domains: 允许爬取的域名.是可选配置,不在此范围的链接不会被跟进爬取
+        - start_urls: 他是起始URL列表,当我们没有实现start_requests()方法时,默认会从这个列表开始爬取
+        - custom_settings: 他是一个字典,是专属于本Spider的配置.此设置会覆盖项目全局的设置,此设置必须在初始化钱被更新,必须定义成类变量
+        - crawler: 它是由from_crawler()方法设置的,代表的是本Spider类对应的Crawler对象
+            - Crawler对象包含很多项目的组件,利用他们我们可以获取项目的一些配置信息,如常见的获取项目的设置信息,即Settings
+        - settings: 他是一个settings对象,利用它我们可以直接获取项目的全局设置变量
+    - 处理基础属性以外,Spider还有一些创建的方法
+        - start_requests(),此方法用于生成初始化请求,他必须返回一个可迭代对象,此方法会默认使用start_urls里面的URL来构建Request,而且Request是GET请求方式
+            - 如果我们想在启动的时候以POST方式访问某个站点,可以直接重写这个方法,发送POST请求时使用FormRequest即可
+        - parse(),当Response没有指定回调函数时,该方法会默认被调用.它负责处理Response,处理返回结果,并从中提取出想要的数据和下一步的请求,然后返回，该方法需要返回一个包含Request或Item的可迭代对象
+        - closed() 当Spider关闭时,该方法会被调用,在这个一般会定义释放资源的一些操作或者其他收尾操作
+##Downloader Middleware 的用法
+- Downloader Middleware即下载中间件,他是处于Scrapy的Request和Response之间的处理模块
+- Scheduler从队列拿出一个Request发送给Downloader执行下载,这个过程会经过Downloader Middleware的处理
+- 另外,当Downloader将Request下载完成得到Response返回给Spider时会再次经过Downloader Middleware处理
+- 也就是说,Downloader Middleware在整个架构中起作用的位置有两个:
+    - 在Scheduler调度出队列的Request发送给Downloader下载之前,也就是我们可以Request执行下载之前对其进行修改
+    - 在下载后生成的Response发送给Spider之前,也就是我们生成Response被Spider解析之前对其进行修改
+- Downloader Middleware的功能十分强大,修改User-Agent,处理重定向,设置代理,失败重试,设置Cookies等功能都需要借助它来实现
+- Scrapy其实已经提供了许多Downloader Middleware,比如负责失败重试,自动重定向等功能等功能Middleware,他们被DOWNLOADER_MIDDLEWARES_BASE变量所定义
+- 核心方法: Scrapy内置的Downloader Middleware为Scrapy提供了基础的功能,但在项目实战中我们往往需要单独定义Downloader Middleware
+    - 每个Downloader Middleware都定义了一个或者多个方法的类,核心的方法有三个:
+        - process_request(request,spider)
+        - process_response(request, response, spider)
+        - process_exceptions(request, exceptions,spider)
+    - 我们只需要实现至少一个方法,就可以定义一个Downloader Middleware
+    - process_request(request, spider)
+        - Request被Scrapy引擎调度给Downloader之前,process_request()方法就会被调用,也就是在Request从队列里调度出来到Downloader下载执行之前,我们都可以用process_request()方法对Request进行处理
+        - 方法的返回值必须为None,Response对象,Request对象之一,或者抛出IgnoreRequest异常
+        - process_request()方法的参数有两个:
+            - request: 是Request对象,即被处理的Request
+            - spider,是Spider对象,即此Request对应的Spider
+        - 返回的类型不同,产生的效果也不同
+            - 当返回None的时候,Scrapy将继续处理该Request，接着执行其他Downloader Middleware的process_request()方法,一直到Downloader把Request执行后得到Response才结束
+                - 这个过程其实就是修改Request的过程,不同的Downloader Middleware按照设置的优先级顺序依次对Request进行修改,最后送至Downloader执行
+            - 当返回为Response对象时,更低优先级的Downloader Middleware的process_request()和process_exception()方法就不会被继续调用了
+                - 每个Downloader Middleware的process_response()方法转而被依次调用,调用完毕之后,直接将Response对象发送给Spider来处理
+            - 当返回为Request对象时,更低优先级的Downloader Middleware的process_request()方法会停止执行
+                - 这个Request会重新放到调度队列里,其实他就是一个全新的Request,等待被调度
+                - 如果被Scheduler调度了,那么所有的Downloader Middleware的process_request()方法会被重新按照顺序执行
+            - 如果IgnoreRequest异常抛出,则所有的Downloader Middleware的process_exception()方法会依次执行
+                - 如果没有一个方法处理这个议程,那么Request的errorback()方法就会回调,如果该异常还没有被处理,那么他便会被忽略
+    - process_response(request, response, spider)
+        - Downloader执行Request下载之后,会得到对应的Response,Scrapy引擎便会将Response发送给Spider进行解析
+        - 在发送之前,我们都可以用process_response()方法来对Response进行处理,方法的返回必须为Request对象,Response对象之一,或者抛出IgnoreRequest异常
+        - process_response()方法的参数有三个:
+            - request:是Request对象,即此Response对应的Request
+            - response:是Response对象,即此被处理的Response
+            - spider: 是Spider对象,即此Response对应的Spider
+        - 当返回不同的情况:
+            - 当返回为Request对象时,更低优先级的Downloader Middleware的process_response()方法不会继续调用,
+                - 该Request对象会重新放到调度队列里等待被调度,它相当于一个全新的Request,然后,该Request会被process_request()方法顺次处理
+            - 当返回Response对象时,更低优先级的Downloader Middlewared process_response()方法会继续调用,继续对该Response对象进行处理
+            - 如果IgnoreRequest异常抛出，则Request的errorback()方法会回调,如果该异常还没有被处理,那么它便会被忽略
+    - process_exception(request, exception, spider)
+        - 当Dowloader或者process_request()方法抛出异常的时候,例如抛出IgnoreRequest()异常,process_exception()方法就会被调用,方法的返回值必须为None,Response对象,Request对象之一
+        - process_exception()方法的参数有三个:
+            - request: 是Request对象,即产生异常的Request
+            - exception: 是Exception对象,即抛出的异常
+            - spider: 是Spider对象,即Request对应的Spider
+        - 不同的返回值:
+            - 当返回为None时,更低优先级的Downloader Middleware的process_exception()会被继续顺次调用,知道所有的方法都被调度完毕
+            - 当返回为Response对象时,更低优先级的Downloader Middleware的process_exception()也不再被继续调用,每个Downloader Middleware的process_response()方法转而被依次调用
+            - 当返回为Request对象时,更低优先级的Downloader Middleware的process_exception()也不再被继续调用,该Request对象会重新放到调度队列里面等待被调度,它相当于一个全新的Request.然后,该Request又会被process_request()方法顺次处理
+- 项目实战:
+    - 新建一个项目: scrapy startproject scrapydownloadertest
+    - 创建一个爬虫项目: scarpy genspider httpbin httpbin.org
+## Spider Middleware的用法
+- Spider Middleware是介入到Scrapy的Spider处理机制的钩子框架
+- 当Downloader生成Response之后,Response会被发送给Spider,在发送给Spider之前,Response会首先经过Spider Middlewares处理
+- 当Spider处理生成Item和Request之后,Item和Request还会经过Spider Middleware的处理
+- Spider Middleware有三个作用
+    - 我们可以在Downloader生成的Response发送给Spider之前,也就是在Response发送给Spider之前对Response进行处理
+    - 我们可以在Spider生成的Request发送给Scheduler之前,也就是在Request发送给Scheduler之前对Request进行处理
+    - 我们可以在Spider生成的Item发送给 Item Pipeline之前,也就是在Item发送给Item Pipeline之前对Item处理
+- 使用说明:Scrapy其实已经提供了许多Spider Middleware,他们被SPIDER_MIDDLEWARE这个变量所定义
+- 核心方法:
+    - Scrapy内置的Spider Middleware为Scrapy提供了基础的功能,如果我们想要扩展其功能,只需要实现某几个方法即可
+    - 每个Spider Middleware都定义了一个或多个方法的类,核心方法有四个:
+        - process_spider_input(response , spider)
+        - process_spider_out_put(response, result, spider)
+        - process_spider_exception(response, exception, spider)
+        - process_start_requests(start_requests, spider)
+    - process_spider_input(response, spider)
+        - 当Response被Spider Middleware处理时,process_spider_input()方法被调用,process_spider_input()方法调用
+        - process_spider_input()方法的参数有两个
+            - response: 是Response对象,即被处理的Response
+            - spider: 是Spider对象,即该Response对应的Spider
+        process_spider_input()应该返回None或者抛出异常
+            - 如果他返回的是None,Scrapy将会继续处理该Response,调用所有其他的Spider Middleware,直到Spider处理该Response
+            - 如果它抛出异常,Scrapy将不会调用其他Spider Middleware的process_spider_input()方法,而调用Request的errorback()方法
+                - errback()的输入将会被重新输入到中间件,使用process_spider_output()方法处理,当其抛出异常时则用process_spider_exception()来处理
+    - process_spider_output(response, result, spider)
+        - 当Spider处理Response返回结果时,process_spider_output()方法被调用
+        - process_spider_output()方法参数有三个:
+            - response: 是Response对象,即生成该输出的Response
+            - result: 包含Request或Item对象的可迭代对象,即Spider返回的结果
+            - spider: 是Spider对象,即其结果对应的Spider
+    - process_spider_exception(response, exception, spider)
+        - 当Spider或Spider Middleware的process_spider_input()方法抛出异常时,process_spider_exception()方法被调用
+        - process_spider_exception()方法的参数有三个:
+            - response: 是Response对象,即异常被抛出时被处理的Response
+            - exception: 是Exception对象,即被抛出的异常
+            - spider: 是Spider对象,即抛出该异常的Spider
+        - process_spider_exception()必须要么返回None,要么返回一个包含Response或Item对象的可迭代对象
+            - 如果它返回None,Scrapy将继续处理该异常,调用其他Spider Middleware中的process_spider_exception()方法,直到所有Spider Middleware都被调用
+            - 如果它返回一个可迭代对象,则其他Spider Middleware的process_spider_output()方法被调用,其他的process_spider_exception不会被调用
+    - process_srart_requests(start_requests, spider)
+        - process_sart_requests()方法以spider启动的Request为参数被调用,执行的过程类似于process_spider_output(),只不过他没有相关联的Response,并且必须返回Request
+        - process_start_requests()方法的参数有两个:
+            - start_requests: 是包含Request的可迭代对象,即Start Request
+            - spider: 是Spider对象,即Start Requests所属的Spider
+        process_start_requests()方必须返回另一个包含Request对象的可迭代对象
+## Item Pipeline的用法
+- Item Pipeline是项目管道,当Spider解析完Response之后,Item就会传递到Item Pipeline,被定义的Item Pipeline组件会顺次调用,完成一连串的处理过程,比如数据清晰,存储等等
+- Item Pipeline的主要功能有四点:
+    - 清理HTML数据
+    - 验证爬取数据,检查爬取字段
+    - 查重并丢弃重复内容
+    - 接爬取结果保存到数据库
+- 核心方法: 我们可以自定义Item Pipeline,只需要指定的方法,其中必须要实现的一个方法就是:process_item(item, spider)
+    - 另外还有几个比较实用的方法:
+        - open_spider(spider)
+        - closed_spider(spider)
+        - from_crawler(cls, crawler)
+    
+
+            
