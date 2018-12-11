@@ -4,8 +4,8 @@ from selenium.webdriver.common.keys import Keys
 
 if __name__ == '__main__':
 
-    driver = webdriver.PhantomJS()
+    driver = webdriver.Chrome()
 
-    driver.get("http://www.baidu.com")
+    driver.get("https://music.163.com/#/discover/toplist?id=3779629")
 
     print("Title: {0}".format(driver.title))

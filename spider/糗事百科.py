@@ -25,6 +25,7 @@ if __name__ == '__main__':
     #print(rep)
 
     html = etree.HTML(rep)
+    print(html)
     rst = html.xpath('//div[contains(@id, "qiushi_tag")]')
     #print(rst)
 

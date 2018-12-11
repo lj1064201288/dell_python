@@ -224,6 +224,68 @@
         - open_spider(spider)
         - closed_spider(spider)
         - from_crawler(cls, crawler)
+    - process_item(item, spider)
+        - process_item()是必须要实现的方法.被定义的Item Pipeline会默认调用这个方法对Item进行处理,比如,我们可以进行数据处理或者将数据写入到数据库等操作,它必须返回Item类型的值或者抛出一个DropItem异常
+        - process_item()方法的参数有两个:
+            - item: 是Item对象,即被处理的Item
+            - spider: 是Spider对象,即生成该Item的Spider
+        - process_item()方法的返回类型归纳:
+            - 如果返回的是Item对象,那么此Item会被低优先级的Item Pipeline  的process_item()方法处理,直到所有的方法被调用完毕
+            - 如果它抛出的是DropItem异常,那么此Item会被丢弃,不会在进行处理
+    - open_spider(self, spider) 
+        - open_spider()方法是在Spider开启的时候自动调用的,在这里我们可以做一些初始化操作,如开启数据库连接等,其中,参数spider就是关闭的Spider对象
+    - close_spider(spider)
+        - close_spider()方法是在Spider关闭的时候自动调用的,在这个我们可以做一些收尾工作,如关闭数据库连接等等,其中,参数spider就是被关闭的Spider对象
+    - from_crawler(cls, crawler)
+        - from_crawer()方法是一个类方法,用@classmethod标识,是一种依赖注入的方式,它的参数是crawler,通过crawler对象
+            - 我们可以拿到Scrapy的所有核心组件,如全局配置的每个信息,然后创建一个Pipeline实例，参数cls就是class,最后返回一个class实例
+- 目标:
+    - 爬取360摄影美图,来分别实MongoDB存储,MySQL存储,Image图片存储的三个Pipeline
+- 准备工作:
+    - 确保安装好MongoDB和MySQL数据库,安装好Python的PyMongo,PyMySQL,Scrapy框架
+- 抓取分析 
+    - 目标网站为:https://image.so.com,打开此页面,切换到摄影页面,网页中呈现了许许多多的摄影美图
+    - 我们打开浏览器开发者工具,过滤器切换到XHR选项,然后下拉页面,可以看到下面就会呈现许多Ajax请求
+    - 查看一个请求的详情,观察返回的数据结构,返回的格式是Json,其中list字段就是一张图片的详情信息,包含了30张图片的ID,名称,链接,缩列图等信息
+    - 另外观察Ajax请求的参数信息,有一个参数sn一直在变化,这个参数很明显就是偏移量,当sn为30时,返回的是前30张图片,sn为60时,返回的就是第31-60张图片
+    - 另外ch参数是摄影类别,listtype是排序方式,temp参数可以忽略
+    - 所以我们抓取时只需要改变sn的数值就好了
+- 新建项目
+    - scrapy startproject images360
+   
+## Scrapy通用爬虫
+- 1.CrawlSpider:
+    - CrawlSpider是Scrapy提供的一个通用Spider,在Spider里,我们可以指定一些爬取规则来实现页面的提取,这些爬取规则有一个专门的数据结构Rule标示
+    - Rule里包含提取和跟进页面的配置,Spider会根据Rule来确定当前页面中的哪些链接需要继续爬取,哪些页面的爬取结果需要用那个方法解析等
+    - CrawlSpider继承自Spider类,除了Spider类的偶有方法和属性,它还提供了一个非常重要的属性和方法
+        - rules,它是爬取规则属性,是包含一个或多个rule对象的列表,每个Rule对爬去网站的动作都做了定义,CrawlSpider会读取rules并进行解析
+        - parse_start_url()，它是一个可重写的方法,当start_urls里对应的Request得到Response时,该方法被调用,它会分析Response并必须返回item对象或者Request对象
+    - link_extractor: 是Link Extractor对象,通过它,Spider可以知道从爬取的页面中提取哪些链接,提取出的链接会自动生成Request.
+        - 他又是一个数据结构,一般常用LxmlLinkExtractor对参数作为参数
+        - allow是一个正则表达式或列表,它定义了从当前页面提取出的链接哪些是符合要求的,只有符合要求的链接才会被跟进,deny则相反.
+        - allow_domains定义了符合的域名,只有此域名的链接才会被跟进生成新的Request,它相当于域名白名单.
+        - deny_domains则相反,相当于域名黑名单.
+        - restrict_xpaths定义了从当前页面中XPath匹配的区域提取链接,其值是XPath表达式获取Xpath表达式列表
+        - restrict_css定义了从当前页面中CSS选择器匹配的区域提取链接,其值是CSS选择器或CSS选择器列表.
+    - callback:即回调函数,和之前定义Request的callback有相同意义.
+        - 每次从link_extractor中获取链接时,该函数将会调用
+        - 该回调函数接受一个Response作为第一个参数,并返回一个包含item或Request对象的列表
+        - 避免使用parse()作为回调函数
+        - 由于CrawlSpider使用Spider()方法来实现其逻辑,如果parse()方法覆盖了,CrawlSpider将会运行失败
+    - cd_kwargs: 字典,它包含传递给回调函数的参数
+    - follow:布尔值,即True或False,他指定根据事先该规则从Response提取的链接是否需要跟进。
+        - 如果callback参数为None，follow默认设置为True,否则默认为False
+     - process_links:指定处理函数,从link_extractor中获取到链接列表时,该函数都会调用对Request进行处理,爱函数将会调用,它主要用于过滤
+     - process_request:同样指定处理函数,根据该ruel提取到每个request时,该函数都会调用,对Request进行处理,该函数必须返回Request或者None
+- 2.Item Loader:
+    - Item Loader提供一种便捷的机制来帮助我们方便的提取Item,它提供的一系列API可以分析原始数据对item进行赋值.
+        - Item提供的是保存抓取数据的容器,而Item Loader提供的是填充容器的机制,有了它,数据的提取会变得更加规则化
+        - item:他是item对象,可以调用add_xpath(),add_css()或者add_value()等方法来填充item对象
+        - selector:它是Selector对象,用来提取填充数据的选择器
+        - resposne:它是Response对象,用于使用构造选择器的Response
+        
+ 
+        
     
 
             

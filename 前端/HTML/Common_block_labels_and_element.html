@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Common_block_labels_and_element</title>
+</head>
+<body>
+<!--常用的有语义的块级元素 有默认样式 独占一行-->
+<!--标题标签h1-h6-->
+    <h1> 这是个一级标题</h1>
+    <h2>这是二级标题</h2>
+    <h3>这是三级标题</h3>
+    <h4>这是四级标题</h4>
+    <h5>这是五级标题</h5>
+    <h6>这是六级标题</h6>
+    <!--段落标签 独占一行 有默认样式-->
+    <!--br 标签强制换行标签-->
+    <p>
+        "超文本标记语言"<br>
+    "（英语：HyperText Markup Language，简称：HTML）是一种用于创建网页的标准标记语言"
+    </p>
+<p>
+    超文本标记语言（英语：HyperText Markup Language，简称：HTML）是一种用于创建网页的标准标记语言。
+</p>
+
+<!--列表-->
+<!--无序列表 ul li 有默认样式 独占一行-->
+<!--注意ul标签当中 只能写li标签-->
+<ul>
+    <li>列表一</li>
+    <li>列表二</li>
+    <li>列表三</li>
+</ul>
+<!--有序列表ol li 有自己的默认样式 独占一行-->
+<!--有序列表当中有type属性 设置有列表的标记类型 start设置列表项从第几个标记开始-->
+<ol type="i" start="5">
+    <li>这是有序列表</li>
+    <li>这是有序列表</li>
+</ol>
+<dl>
+    <dt>这是自定义列表</dt>
+    <dd>This is a custom list</dd>
+    <dd>This is a custom list</dd>
+    <dt>This is a custom list title</dt>
+    <dd>This is an explanation of the title of the list</dd>
+</dl>
+<table border="1" cellpadding="10px" cellspacing="'0" width="'800px" height="700px">
+    <tbody>
+    <tr>
+        <th colspan="4">This a table head</th>
+        <!--<td>这是第一行的第一列</td>-->
+        <!--<td>这是第一行的第二列</td>-->
+        <!--<td>这是第一行的第三列</td>-->
+        <!--<td>这是第一行的第四列</td>-->
+    </tr>
+    <tr valign="top" align="center">
+        <td rowspan="2"> 这是第二列的第一列</td>
+        <td>这是第二行的第二列</td>
+        <td>这是第二行的第三列</td>
+        <td>这是第三行的第四列</td>
+    </tr>
+    </tbody>
+</table>
+<hr>
+<div>This is a div</div>
+<br>
+<br>
+<br>
+
+</body>
+</html>

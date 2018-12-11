@@ -1,19 +1,20 @@
 # -*- coding: utf-8 -*-
-import scrapy
 import json
+import scrapy
 from scrapy import Spider, Request
 from urllib.parse import urlencode
 from images360.items import ImageItem
+
+MAX_PAGE = 50
 
 class ImagesSpider(scrapy.Spider):
     name = 'images'
     allowed_domains = ['images.so.com']
     start_urls = ['http://images.so.com/']
-
     def start_requests(self):
-        data = {'ch': 'photography', 'listtype': 'new'}
+        data = {'ch':'photography', 'listtype':'new'}
         base_url = 'https://image.so.com/zj?'
-        for page in range(1, self.settings.get('MAX_PAGE') + 1):
+        for page in range(1,self.settings.get('MAX_PAGE') + 1):
             data['sn'] = page * 30
             params = urlencode(data)
             url = base_url + params
@@ -27,6 +28,6 @@ class ImagesSpider(scrapy.Spider):
             item['url'] = image.get('qhimg_url')
             item['title'] = image.get('group_title')
             item['thumb'] = image.get('qhimg_thumb_url')
-            yield item
 
+            yield item
 

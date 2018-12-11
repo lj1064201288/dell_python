@@ -34,6 +34,7 @@ class XiaohuaPipeline(object):
                             f.write(response.content)
             if url in content['img']:
                 response = requests.get(content['img'])
+                print(response)
                 if response.status_code == 200:
                     img_path = file_path + os.path.sep + md5(response.content).hexdigest() + ".jpg"
                     if not os.path.exists(img_path):

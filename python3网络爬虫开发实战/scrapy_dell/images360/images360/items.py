@@ -13,9 +13,10 @@ class Images360Item(scrapy.Item):
     # name = scrapy.Field()
     pass
 
-class ImageItem(Item):
+class ImageItem(scrapy.Item):
     collection = table = 'images'
     id = Field()
     url = Field()
     title = Field()
     thumb = Field()
+

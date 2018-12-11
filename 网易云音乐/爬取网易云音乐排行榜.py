@@ -2,11 +2,11 @@
 '''
 爬取网易云音乐榜单
 '''
-
 # 导入需要使用的模块
 import os
 import csv
 import time
+import random
 import requests
 # import multiprocessing
 import threading
@@ -14,6 +14,16 @@ from lxml import etree
 from selenium import webdriver
 
 
+agents = [
+            "Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; .NET4.0C; .NET4.0E; .NET CLR 2.0.50727; .NET CLR 3.0.30729; .NET CLR 3.5.30729; InfoPath.3; rv:11.0) like Gecko",
+            "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0",
+            "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0; Trident/4.0)",
+            "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:2.0.1) Gecko/20100101 Firefox/4.0.1",
+            "Mozilla/5.0 (Windows NT 6.1; rv:2.0.1) Gecko/20100101 Firefox/4.0.1",
+            "Opera/9.80 (Macintosh; Intel Mac OS X 10.6.8; U; en) Presto/2.8.131 Version/11.11",
+
+]
 
 
 class WangyiMusc(object):
@@ -46,15 +56,15 @@ class WangyiMusc(object):
         try:
             for content in contents:
 
-                title = content.xpath('./td/div/div/div/span/a/b/@title')[0].strip()
+                name = content.xpath('./td/div/div/div/span/a/b/@title')[0].replace(' ', '')
                 music_id = content.xpath('./td/div/div/span/@data-res-id')[0].strip()
                 # 将歌曲的名称与id传给write_music方法进行下载
-                self.write_music(title, music_id)
+                self.write_music(name, music_id)
                 num = content.xpath('./td/div/span[@class="num"]/text()')[0].strip()
                 date = content.xpath('./td[@class=" s-fc3"]/span/text()')[0].strip()
                 singer = content.xpath('./td/div[@class="text"]/@title')[0].strip()
                 # 将歌曲的信息构建成个元组类型
-                items = num, title, date, singer
+                items = num, name, date, singer
 
                 # 每获得一次歌曲信息后返回一次
                 yield  list(items)
@@ -69,11 +79,12 @@ class WangyiMusc(object):
         return tt
 
     # 得到歌曲的名称与id,这里进行下载
-    def write_music(self, title, music_id):
+    def write_music(self, name, music_id):
         url = self.music_url.format(music_id)
+        agent = random.choice(agents)
         try:
             headers = {
-                'User-Agent':'Mozilla/5.0(WindowsNT10.0;Win64;x64)AppleWebKit/537.36(KHTML,likeGecko)Chrome/70.0.3538.77Safari/537.36',
+                'User-Agent': agent
             }
             music = requests.get(url, headers=headers)
 
@@ -83,12 +94,12 @@ class WangyiMusc(object):
                 # 查询是否有这个地址,如果没有递归创建
                 if not os.path.exists(path):
                     os.makedirs(path)
-                with open(path+title+'.mp3', 'ab') as f:
+                with open(path+name+'.mp3', 'ab') as f:
                     f.write(music.content)
-                    print('下载' + title + "成功...")
+                    print('下载 ' + name + " 成功...")
 
         except Exception as e:
-            print("下载{0}失败!!!".format(title), e.args)
+            print("下载 {0} 失败!!!".format(name), e.args)
 
     # 保存榜单的信息
     def write_items(self):
@@ -192,7 +203,6 @@ def user_select():
     mating = nums[n]
 
     operation(mating, id)
-
 
 if __name__ == '__main__':
     # 程序开始

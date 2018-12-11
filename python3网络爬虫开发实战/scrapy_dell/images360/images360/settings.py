@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-MAX_PAGE = 50
 # Scrapy settings for images360 project
 #
 # For simplicity, this file contains only settings considered important or
@@ -11,9 +10,12 @@ MAX_PAGE = 50
 #     https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
 BOT_NAME = 'images360'
+MONGO_URI = 'localhost'
+MONGO_DB = 'images360'
 
 SPIDER_MODULES = ['images360.spiders']
 NEWSPIDER_MODULE = 'images360.spiders'
+MAX_PAGE = 50
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
@@ -67,9 +69,7 @@ ROBOTSTXT_OBEY = False
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
 #    'images360.pipelines.Images360Pipeline': 300,
-    'images360.pipelines.MongoPipeline': 310,
-    'images360.pipelines.MysqlPipeline': 305,
-    'images360.pipelines.ImagePipeline': 300,
+    'images360.pipelines.MongoPipeline': 300,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -92,14 +92,3 @@ ITEM_PIPELINES = {
 #HTTPCACHE_DIR = 'httpcache'
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
-
-MONGO_URI = 'localhost'
-MONGO_DB = 'images360'
-
-MYSQL_HOST = 'localhost'
-MYSQL_DATABASE = 'images360'
-MYSQL_PORT = 3306
-MYSQL_USER = 'root'
-MYSQL_PASSWORD = '123456'
-
-IMAGES_STORE = './images'

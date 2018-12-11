@@ -14,8 +14,6 @@ class BaiduSpider(scrapy.Spider):
     # 起始页面
     start_urls = ['https://talent.baidu.com/baidu/web/httpservice/getPostList?recruitType=2&pageSize=10&curPage=1']
 
-
-
     def parse(self, response):
 
         # 使用BeautifulSoup获取源码

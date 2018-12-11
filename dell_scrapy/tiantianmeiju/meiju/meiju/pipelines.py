@@ -16,16 +16,16 @@ class MeijuPipeline(object):
 class MeijuPipline(object):
 
     def __init__(self):
-        self.file = open('meiju.json', 'wb')
+        self.file = open('meiju.json', 'w')
 
     def process_item(self, item, spider):
         # print(item['name'])
         # print(item['href'])
         # print(item['tv'])
 
-
-        with open('meiju.json', 'a') as f:
-            json.dump(dict(item), f, indent=5)
-
-
+        content = json.dumps(dict(item), ensure_ascii=False) + '\n'
+        self.file.write(content)
         return item
+
+    def close_spider(self, spider):
+        self.file.close()
